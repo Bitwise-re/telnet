@@ -6,8 +6,7 @@
 #include <pthread.h>
 
 #define PORT 23 
-#define INPUT_BUFFER_SIZE 16*1024*4
-#define OUTPUT_BUFFER_SIZE 16*1024*4
+#define INPUT_BUFFER_SIZE 1024
 
 struct clientThreadData {
 	int socket;
@@ -16,28 +15,11 @@ struct clientThreadData {
 
 void* clientThreadExecute(void *args) {
 	char input[INPUT_BUFFER_SIZE];
-	char output[OUTPUT_BUFFER_SIZE];
+	int input_status;
 	struct clientThreadData client = *(struct clientThreadData*)args;
-	size_t input_size;
-
-	//interface start
-	
-	sprintf(output, "Welcome to Bitwise.re ! The telnet interface is custom and not yet fully implemented.\n");
-	write(client.socket, output, sizeof(output));
-	while ((input_size = read(client.socket, input, INPUT_BUFFER_SIZE)) > 0) {
+	while ((input_status = read(client.socket, input, INPUT_BUFFER_SIZE)) > 0) {
 		// process user input
-		if (strcmp(input, "exit") == 0 || strcmp(input, "quit") == 0) {
-			break;
-		}
-
-		if (strcmp(input, "ping") == 0) {
-			sprintf(output, "pong");
-			write(client.socket, output, sizeof(output));
-		}
 	}
-
-	//interface stop
-
 	close(client.socket);
 	printf("Client (%s) disconnected\n", inet_ntoa(client.addr.sin_addr));
 	return NULL;
