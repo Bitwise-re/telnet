@@ -1,4 +1,4 @@
-name: Upload to Pi
+name: Deploy
 on:
   push:
     branches:
@@ -19,3 +19,12 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "./*"
           target: "/home/git/custom-telnet"
+      - name: restart service
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: /home/git/custom-telnet/restart.sh
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          privateKey: ${{ secrets.SSH_KEY}}
