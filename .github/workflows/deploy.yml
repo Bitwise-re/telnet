@@ -22,7 +22,7 @@ jobs:
       - name: restart service
         uses: garygrossgarten/github-action-ssh@release
         with:
-          command: /home/git/custom-telnet/restart.sh
+          command: sudo /home/git/custom-telnet/rootdir/restart.sh
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           port: ${{ secrets.SSH_PORT }}
