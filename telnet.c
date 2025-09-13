@@ -17,23 +17,28 @@ struct clientThreadData {
 void* clientThreadExecute(void *args) {
 	char input[INPUT_BUFFER_SIZE];
 	char output[OUTPUT_BUFFER_SIZE];
+	char buff[256];
 	struct clientThreadData client = *(struct clientThreadData*)args;
-	size_t input_size;
+	int input_size;
 
 	//interface start
 	
 	sprintf(output, "Welcome to Bitwise.re ! The telnet interface is custom and not yet fully implemented.\n");
-	write(client.socket, output, sizeof(output));
+	write(client.socket, output, strlen(output));
+	
+	//isolate connection signal and reset the buffer
+	read(client.socket, buff, 255);
+	strcpy(buff, "");
 	while ((input_size = read(client.socket, input, INPUT_BUFFER_SIZE)) > 0) {
 		// process user input
-		if (strcmp(input, "exit") == 0 || strcmp(input, "quit") == 0) {
+		if (strcmp(input, "exit\r\n") == 0 || strcmp(input, "quit\r\n") == 0) {
 			break;
 		}
-
-		if (strcmp(input, "ping") == 0) {
-			sprintf(output, "pong");
-			write(client.socket, output, sizeof(output));
+		if (strcmp(input, "ping\r\n") == 0) {
+			sprintf(output, "pong\r\n");
+			write(client.socket, output, strlen(output));
 		}
+		memset(&input[0], 0, sizeof(input));
 	}
 
 	//interface stop
