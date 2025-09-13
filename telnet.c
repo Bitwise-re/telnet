@@ -9,35 +9,63 @@
 #define INPUT_BUFFER_SIZE 16*1024*4
 #define OUTPUT_BUFFER_SIZE 16*1024*4
 
+//Data passed to a client thread (see function : clientThreadExecute)
 struct clientThreadData {
-	int socket;
-	struct sockaddr_in addr;
+	int socket; //socket id
+	struct sockaddr_in addr; //client address
 };
 
+//prints a string as hex values in the terminal
+void hexDump(char *dump, size_t s) {
+	for (int i = 0; i <= s; ++i) {
+		printf("%02x", dump[i]);
+	}
+	printf("\r\n");
+}
+
+//Handles the connexion client/server
 void* clientThreadExecute(void *args) {
+
+	// define buffers
 	char input[INPUT_BUFFER_SIZE];
 	char output[OUTPUT_BUFFER_SIZE];
 	char buff[256];
+
+	//store client info
 	struct clientThreadData client = *(struct clientThreadData*)args;
+	
+	//variables
 	int input_size;
 
 	//interface start
-	
-	sprintf(output, "Welcome to Bitwise.re ! The telnet interface is custom and not yet fully implemented.\n");
+	strcpy(output, "Welcome to Bitwise.re ! The telnet interface is custom and not yet fully implemented.\r\n$> ");
 	write(client.socket, output, strlen(output));
 	
 	//isolate connection signal and reset the buffer
-	read(client.socket, buff, 255);
-	strcpy(buff, "");
+	read(client.socket, input, 255);
+	memset(&input[0], 0, sizeof(input));
+	
+	//process user input
 	while ((input_size = read(client.socket, input, INPUT_BUFFER_SIZE)) > 0) {
-		// process user input
+		//debug
+		//hexDump(input, strlen(input)-1);
+		
 		if (strcmp(input, "exit\r\n") == 0 || strcmp(input, "quit\r\n") == 0) {
 			break;
-		}
-		if (strcmp(input, "ping\r\n") == 0) {
-			sprintf(output, "pong\r\n");
+		} else if (strcmp(input, "ping\r\n") == 0) {
+			strcpy(output, "pong\r\n");
+			write(client.socket, output, strlen(output));
+		} else {
+			strcpy(output, "Unknown command : ");
+			strcpy(&output[strlen(output)], input);
 			write(client.socket, output, strlen(output));
 		}
+
+		//send newline start
+		strcpy(output, "$>");
+		write(client.socket, output, strlen(output));
+		
+		//resets the input
 		memset(&input[0], 0, sizeof(input));
 	}
 
@@ -48,6 +76,7 @@ void* clientThreadExecute(void *args) {
 	return NULL;
 }
 
+//initializes server socket and redirect client connexion to a client thread
 int main() {
 	int server_socket, client_socket;
 	struct sockaddr_in server_addr, client_addr;
