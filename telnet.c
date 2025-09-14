@@ -46,16 +46,35 @@ void* clientThreadExecute(void *args) {
 	memset(&input[0], 0, sizeof(input));
 	
 	//process user input
-	while ((input_size = read(client.socket, input, INPUT_BUFFER_SIZE)) > 0) {
+	while ((input_size = read(client.socket, &input[strlen(input)], INPUT_BUFFER_SIZE)) > 0) {
 		//debug
-		//hexDump(input, strlen(input)-1);
-		
+		hexDump(&input[strlen(input)-input_size], input_size);
+		hexDump(input, strlen(input));
+
+		//handle telnet commands
+		if (strcmp(&input[strlen(input)-input_size], "ÿÿÿÿÿÿÿÿ\n") >= 0) {
+			memset(&input[0], 0, sizeof(input));
+		}
+
+		//handle char mode (e.g. for windows)
+		if (strcmp(&input[strlen(input)-1], "\n") != 0 && strcmp(&input[strlen(input)-1], "\r") != 0) {
+			continue;
+		}
+		if (strcmp(&input[strlen(input)-1], "\r") == 0) {
+			strcpy(&input[strlen(input)], "\n");
+		}
+		if (strcmp(&input[strlen(input)-1], "\n") == 0 && strcmp(&input[strlen(input)-2], "\r\n") != 0) {
+			strcpy(&input[strlen(input)-1], "\r\n");
+		}
+	
+
+
 		if (strcmp(input, "exit\r\n") == 0 || strcmp(input, "quit\r\n") == 0) {
 			break;
 		} else if (strcmp(input, "ping\r\n") == 0) {
 			strcpy(output, "pong\r\n");
 			write(client.socket, output, strlen(output));
-		} else {
+		} else if (strcmp(input, "\r\n") != 0) {
 			strcpy(output, "Unknown command : ");
 			strcpy(&output[strlen(output)], input);
 			write(client.socket, output, strlen(output));
