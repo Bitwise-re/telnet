@@ -97,7 +97,7 @@ void* clientThreadExecute(void *args) {
 	}
 
 	//interface stop
-	strcpy(output, "Disconnecting...");
+	strcpy(output, "Disconnecting...\r\n");
 	write(client.socket, output, strlen(output));
 	close(client.socket);
 	printf("Client (%s) disconnected\n", inet_ntoa(client.addr.sin_addr));
