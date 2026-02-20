@@ -4,10 +4,12 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <time.h>
 
 #define PORT 23 
 #define INPUT_BUFFER_SIZE 16*1024*4
 #define OUTPUT_BUFFER_SIZE 16*1024*4
+#define CONNECTION_TIMEOUT_S 3600
 
 //Data passed to a client thread (see function : clientThreadExecute)
 struct clientThreadData {
@@ -33,6 +35,12 @@ void* clientThreadExecute(void *args) {
 
 	//store client info
 	struct clientThreadData client = *(struct clientThreadData*)args;
+
+	//set timeout properties
+	struct timeval tv;
+	tv.tv_sec = CONNECTION_TIMEOUT_S;
+	tv.tv_usec = 0;
+	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 	
 	//variables
 	int input_size;
@@ -89,7 +97,8 @@ void* clientThreadExecute(void *args) {
 	}
 
 	//interface stop
-
+	strcpy(output, "Disconnecting...");
+	write(client.socket, output, strlen(output));
 	close(client.socket);
 	printf("Client (%s) disconnected\n", inet_ntoa(client.addr.sin_addr));
 	return NULL;
